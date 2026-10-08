@@ -1,0 +1,25 @@
+{
+  "name": "project-studio-community-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.0.0" },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "fastify": "5.12.5",
+    "pg": "8.16.3",
+    "zod": "4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.1",
+    "@types/pg": "8.15.6",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
+  }
+}
