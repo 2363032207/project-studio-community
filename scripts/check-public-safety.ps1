@@ -6,12 +6,13 @@ $forbiddenFiles = @(
   '.env', '*.pem', '*.key', '*.p12', '*.pfx', '*.db', '*.sqlite', '*.sqlite3',
   '*.bak', '*.dump', '*.tar', '*.zip'
 )
+$trackedFiles = @(& git ls-files)
+if ($LASTEXITCODE -ne 0) { throw '无法读取 Git 跟踪文件列表。' }
 $foundFiles = foreach ($pattern in $forbiddenFiles) {
-  Get-ChildItem -Recurse -File -Force -Filter $pattern -ErrorAction SilentlyContinue |
-    Where-Object { $_.FullName -notmatch '[\\/]node_modules[\\/]' -and $_.FullName -notmatch '[\\/]dist[\\/]' }
+  $trackedFiles | Where-Object { (Split-Path $_ -Leaf) -like $pattern }
 }
 if ($foundFiles) {
-  Write-Error ("发现禁止公开的文件：`n" + (($foundFiles.FullName | Sort-Object -Unique) -join "`n"))
+  Write-Error ("发现禁止公开的 Git 跟踪文件：`n" + (($foundFiles | Sort-Object -Unique) -join "`n"))
 }
 
 $rg = Get-Command rg -ErrorAction SilentlyContinue
