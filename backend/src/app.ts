@@ -3,11 +3,12 @@ import { z, ZodError } from 'zod';
 import type { Config } from './config.js';
 import { createToken, hashPassword, tokenHash, verifyPassword } from './auth.js';
 import { Database } from './database.js';
+import { registerExtendedRoutes } from './extended.js';
 
-type CurrentUser = { id: string; email: string; display_name: string; role: 'admin' | 'user' };
+export type CurrentUser = { id: string; email: string; display_name: string; role: 'admin' | 'user' };
 declare module 'fastify' { interface FastifyRequest { currentUser: CurrentUser | null } }
 
-class HttpError extends Error {
+export class HttpError extends Error {
   constructor(readonly status: number, readonly code: string, message: string) { super(message); }
 }
 
@@ -22,6 +23,8 @@ const versionInput = z.object({
   status: z.enum(['planned', 'active', 'released', 'archived']).default('planned'),
   start_date: z.string().date().nullable().optional(),
   release_date: z.string().date().nullable().optional(),
+  objective: z.string().max(20_000).default(''),
+  release_notes: z.string().max(50_000).default(''),
 });
 const itemInput = z.object({
   kind: z.enum(['requirement', 'bug']),
@@ -33,6 +36,14 @@ const itemInput = z.object({
   version_id: uuid.nullable().optional(),
   planned_start: z.string().date().nullable().optional(),
   planned_end: z.string().date().nullable().optional(),
+  parent_id: uuid.nullable().optional(),
+  acceptance_criteria: z.string().max(50_000).default(''),
+  severity: z.enum(['critical', 'major', 'minor', 'trivial']).nullable().optional(),
+  environment: z.string().max(120).default(''),
+  reproduction_steps: z.string().max(100_000).default(''),
+  actual_result: z.string().max(100_000).default(''),
+  expected_result: z.string().max(100_000).default(''),
+  estimate_points: z.coerce.number().int().min(0).max(1000).nullable().optional(),
 });
 const caseInput = z.object({
   title: z.string().trim().min(1).max(300),
@@ -42,6 +53,10 @@ const caseInput = z.object({
   steps: z.string().trim().min(1).max(100_000),
   expected_result: z.string().trim().min(1).max(100_000),
   status: z.enum(['draft', 'ready', 'deprecated']).default('draft'),
+  suite_id: uuid.nullable().optional(),
+  case_type: z.enum(['functional', 'integration', 'regression', 'performance', 'security', 'usability']).default('functional'),
+  automation_status: z.enum(['manual', 'candidate', 'automated']).default('manual'),
+  tags: z.array(z.string().trim().min(1).max(50)).max(30).default([]),
 });
 
 function requireUser(request: FastifyRequest): CurrentUser {
@@ -271,8 +286,8 @@ export async function buildApp(config: Config, database = new Database(config.da
     await projectRole(request, projectId, true);
     const body = versionInput.parse(request.body);
     const result = await database.pool.query(
-      `INSERT INTO versions(project_id,name,status,start_date,release_date) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-      [projectId, body.name, body.status, body.start_date ?? null, body.release_date ?? null],
+      `INSERT INTO versions(project_id,name,status,start_date,release_date,objective,release_notes) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [projectId, body.name, body.status, body.start_date ?? null, body.release_date ?? null, body.objective, body.release_notes],
     );
     await audit(requireUser(request).id, 'created', 'version', result.rows[0].id, projectId, body);
     return reply.code(201).send(result.rows[0]);
@@ -286,8 +301,8 @@ export async function buildApp(config: Config, database = new Database(config.da
     if (!current.rowCount) throw new HttpError(404, 'NOT_FOUND', '版本不存在');
     const value = { ...current.rows[0], ...body };
     const result = await database.pool.query(
-      `UPDATE versions SET name=$3,status=$4,start_date=$5,release_date=$6,updated_at=now() WHERE id=$1 AND project_id=$2 RETURNING *`,
-      [id, projectId, value.name, value.status, value.start_date, value.release_date],
+      `UPDATE versions SET name=$3,status=$4,start_date=$5,release_date=$6,objective=$7,release_notes=$8,updated_at=now() WHERE id=$1 AND project_id=$2 RETURNING *`,
+      [id, projectId, value.name, value.status, value.start_date, value.release_date, value.objective, value.release_notes],
     );
     await audit(requireUser(request).id, 'updated', 'version', id, projectId, body);
     return result.rows[0];
@@ -327,9 +342,9 @@ export async function buildApp(config: Config, database = new Database(config.da
     const next = await database.pool.query<{ value: string }>(`SELECT nextval('${sequence}')::text AS value`);
     const code = `${prefix}-${String(next.rows[0]?.value).padStart(5, '0')}`;
     const result = await database.pool.query(
-      `INSERT INTO work_items(project_id,code,kind,title,description,status,priority,assignee_id,version_id,planned_start,planned_end,created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-      [projectId, code, body.kind, body.title, body.description, body.status, body.priority, body.assignee_id ?? null, body.version_id ?? null, body.planned_start ?? null, body.planned_end ?? null, requireUser(request).id],
+      `INSERT INTO work_items(project_id,code,kind,title,description,status,priority,assignee_id,version_id,planned_start,planned_end,parent_id,acceptance_criteria,severity,environment,reproduction_steps,actual_result,expected_result,estimate_points,created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING *`,
+      [projectId, code, body.kind, body.title, body.description, body.status, body.priority, body.assignee_id ?? null, body.version_id ?? null, body.planned_start ?? null, body.planned_end ?? null, body.parent_id ?? null, body.acceptance_criteria, body.severity ?? null, body.environment, body.reproduction_steps, body.actual_result, body.expected_result, body.estimate_points ?? null, requireUser(request).id],
     );
     await audit(requireUser(request).id, 'created', body.kind, result.rows[0].id, projectId, { code, title: body.title });
     return reply.code(201).send(result.rows[0]);
@@ -343,9 +358,9 @@ export async function buildApp(config: Config, database = new Database(config.da
     if (!current.rowCount) throw new HttpError(404, 'NOT_FOUND', '工作项不存在');
     const value = { ...current.rows[0], ...body };
     const result = await database.pool.query(
-      `UPDATE work_items SET title=$3,description=$4,status=$5,priority=$6,assignee_id=$7,version_id=$8,planned_start=$9,planned_end=$10,updated_at=now()
+      `UPDATE work_items SET title=$3,description=$4,status=$5,priority=$6,assignee_id=$7,version_id=$8,planned_start=$9,planned_end=$10,parent_id=$11,acceptance_criteria=$12,severity=$13,environment=$14,reproduction_steps=$15,actual_result=$16,expected_result=$17,estimate_points=$18,updated_at=now()
        WHERE id=$1 AND project_id=$2 RETURNING *`,
-      [id, projectId, value.title, value.description, value.status, value.priority, value.assignee_id, value.version_id, value.planned_start, value.planned_end],
+      [id, projectId, value.title, value.description, value.status, value.priority, value.assignee_id, value.version_id, value.planned_start, value.planned_end, value.parent_id, value.acceptance_criteria, value.severity, value.environment, value.reproduction_steps, value.actual_result, value.expected_result, value.estimate_points],
     );
     await audit(requireUser(request).id, 'updated', value.kind, id, projectId, body);
     return result.rows[0];
@@ -363,7 +378,13 @@ export async function buildApp(config: Config, database = new Database(config.da
   app.get('/api/projects/:projectId/test-cases', async (request) => {
     const { projectId } = z.object({ projectId: uuid }).parse(request.params);
     await projectRole(request, projectId);
-    const result = await database.pool.query('SELECT * FROM test_cases WHERE project_id=$1 ORDER BY updated_at DESC', [projectId]);
+    const result = await database.pool.query(
+      `SELECT c.*,s.name AS suite_name,coalesce(array_agg(r.id) FILTER (WHERE r.id IS NOT NULL),'{}') AS requirement_ids,
+       coalesce(array_agg(r.code) FILTER (WHERE r.code IS NOT NULL),'{}') AS requirement_codes
+       FROM test_cases c LEFT JOIN test_suites s ON s.id=c.suite_id
+       LEFT JOIN test_case_requirements x ON x.test_case_id=c.id LEFT JOIN work_items r ON r.id=x.requirement_id
+       WHERE c.project_id=$1 GROUP BY c.id,s.name ORDER BY c.updated_at DESC`, [projectId],
+    );
     return { items: result.rows };
   });
 
@@ -374,9 +395,9 @@ export async function buildApp(config: Config, database = new Database(config.da
     const next = await database.pool.query<{ value: string }>(`SELECT nextval('case_code_seq')::text AS value`);
     const code = `TC-${String(next.rows[0]?.value).padStart(5, '0')}`;
     const result = await database.pool.query(
-      `INSERT INTO test_cases(project_id,code,title,module,priority,preconditions,steps,expected_result,status,created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-      [projectId, code, body.title, body.module, body.priority, body.preconditions, body.steps, body.expected_result, body.status, requireUser(request).id],
+      `INSERT INTO test_cases(project_id,code,title,module,priority,preconditions,steps,expected_result,status,suite_id,case_type,automation_status,tags,created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+      [projectId, code, body.title, body.module, body.priority, body.preconditions, body.steps, body.expected_result, body.status, body.suite_id ?? null, body.case_type, body.automation_status, body.tags, requireUser(request).id],
     );
     await audit(requireUser(request).id, 'created', 'test_case', result.rows[0].id, projectId, { code, title: body.title });
     return reply.code(201).send(result.rows[0]);
@@ -390,9 +411,9 @@ export async function buildApp(config: Config, database = new Database(config.da
     if (!current.rowCount) throw new HttpError(404, 'NOT_FOUND', '测试用例不存在');
     const value = { ...current.rows[0], ...body };
     const result = await database.pool.query(
-      `UPDATE test_cases SET title=$3,module=$4,priority=$5,preconditions=$6,steps=$7,expected_result=$8,status=$9,updated_at=now()
+      `UPDATE test_cases SET title=$3,module=$4,priority=$5,preconditions=$6,steps=$7,expected_result=$8,status=$9,suite_id=$10,case_type=$11,automation_status=$12,tags=$13,updated_at=now()
        WHERE id=$1 AND project_id=$2 RETURNING *`,
-      [id, projectId, value.title, value.module, value.priority, value.preconditions, value.steps, value.expected_result, value.status],
+      [id, projectId, value.title, value.module, value.priority, value.preconditions, value.steps, value.expected_result, value.status, value.suite_id, value.case_type, value.automation_status, value.tags],
     );
     await audit(requireUser(request).id, 'updated', 'test_case', id, projectId, body);
     return result.rows[0];
@@ -406,6 +427,7 @@ export async function buildApp(config: Config, database = new Database(config.da
     return reply.code(204).send();
   });
 
+  registerExtendedRoutes(app, database, { audit, projectRole });
   app.addHook('onClose', async () => database.close());
   return app;
 }
