@@ -18,10 +18,12 @@ PostgreSQL 16
 - `frontend`：登录、项目切换、总览、需求、问题、版本、里程碑、排期、测试资产、测试执行、质量报告和审计；
 - `backend/src/app.ts`：HTTP API 与权限入口；
 - `backend/src/extended.ts`：里程碑、排期、测试套件、测试计划、覆盖矩阵、质量报告与虚构演示数据 API；
+- `backend/src/quality.ts`：性能/APK 项目权限和流式上传网关；
+- `quality-service/quality`：Python 文件分析服务，使用 SQLite 保存任务历史，独立子进程执行解析；
 - `backend/src/auth.ts`：密码哈希和随机会话 Token；
 - `backend/src/database.ts`：数据库连接和迁移；
 - `backend/migrations`：从空数据库可执行的完整结构；
-- `docker-compose.yml`：数据库、API、Web 三个容器。
+- `docker-compose.yml`：数据库、API、Web 与 Python quality 四个容器；质量数据保存在独立卷中。
 
 ## 主要数据关系
 

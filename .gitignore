@@ -4,6 +4,9 @@ dist/
 *.log
 .DS_Store
 coverage/
+__pycache__/
+*.pyc
+.venv/
 data/
 scripts/public-safety.local-patterns.txt
 !.gitkeep

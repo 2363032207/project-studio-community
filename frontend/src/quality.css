@@ -1,0 +1,288 @@
+.q-workspace {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+.q-section {
+  padding: 22px;
+}
+.q-section h3 {
+  margin-bottom: 10px;
+}
+.q-section li {
+  margin: 9px 0;
+  color: #64738e;
+  font-size: 13px;
+}
+.q-help {
+  color: #75829b;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.q-notice {
+  padding: 14px 18px;
+  color: #536a97;
+  background: #edf3ff;
+  border: 1px solid #d8e4fc;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.q-history-summary,
+.q-report-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.q-history-summary span {
+  color: #7b87a0;
+  font-size: 12px;
+}
+.q-report-heading {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 22px;
+}
+.q-report-heading h3 {
+  margin: 0 0 6px;
+}
+.q-report-heading p {
+  margin: 0;
+  color: #8190a8;
+  font-size: 12px;
+}
+.q-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.q-chart {
+  padding: 20px;
+}
+.q-chart h3 {
+  font-size: 14px;
+}
+.q-chart svg {
+  width: 100%;
+  height: auto;
+}
+.q-chart svg text {
+  font-size: 11px;
+  fill: #8492ac;
+}
+.q-chart small {
+  color: #8794aa;
+  font-size: 11px;
+}
+.q-workspace input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #4263eb;
+}
+.q-levels,
+.q-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.q-level {
+  display: inline-block;
+  border-radius: 6px;
+  padding: 4px 7px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.q-level.P0 {
+  background: #ffdbe3;
+  color: #a51939;
+}
+.q-level.P1 {
+  background: #ffeaef;
+  color: #c03e5a;
+}
+.q-level.P2 {
+  background: #fff2dc;
+  color: #ad750e;
+}
+.q-bad {
+  color: #c13754;
+}
+.q-task-error {
+  max-width: 420px;
+  white-space: normal;
+  margin: 7px 0 0;
+  word-break: break-word;
+  font-size: 11px;
+}
+.q-risk-list {
+  padding: 3px 20px 15px;
+}
+.q-risk {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 17px 0;
+  border-bottom: 1px solid #e9edf4;
+}
+.q-risk:last-child {
+  border: 0;
+}
+.q-risk strong {
+  font-size: 14px;
+}
+.q-risk code {
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+  color: #8a6670;
+  word-break: break-all;
+}
+.q-risk p {
+  margin: 6px 0;
+  font-size: 12px;
+  color: #72809a;
+}
+.q-risk .q-advice {
+  color: #3d557c;
+}
+.q-workspace .panel-title select {
+  width: 150px;
+}
+.q-section-tools {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.q-section-tools input {
+  max-width: 400px;
+}
+.q-section-tools label {
+  min-width: 240px;
+}
+.q-section-tools span {
+  color: #7a88a1;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.q-log {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.q-log summary {
+  cursor: pointer;
+  font-size: 13px;
+}
+.q-log summary span {
+  margin-left: 20px;
+  color: #8691a6;
+}
+.q-log pre {
+  font:
+    12px/1.8 Consolas,
+    monospace;
+  background: #f5f7fb;
+  color: #435675;
+  padding: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.q-categories {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 19px 32px;
+}
+.q-categories article > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+.q-categories small {
+  color: #8793aa;
+  font-size: 11px;
+}
+.q-category-bar {
+  background: #edf1f7;
+  height: 8px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+.q-category-bar i {
+  display: block;
+  background: #5473e6;
+  height: 100%;
+  min-width: 1px;
+}
+.q-cat-so i {
+  background: #9465dd;
+}
+.q-cat-resources i {
+  background: #35a383;
+}
+.q-cat-images i,
+.q-cat-atlas i {
+  background: #df9b40;
+}
+.q-cat-audio i {
+  background: #d577a5;
+}
+.q-cat-video i {
+  background: #4f9dc1;
+}
+.q-checks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.q-checks article {
+  background: #f6f8fc;
+  border-radius: 9px;
+  padding: 14px;
+  display: grid;
+  gap: 7px;
+  font-size: 12px;
+}
+.q-checks span {
+  color: #7485a0;
+}
+.q-unknown {
+  color: #a8751b;
+}
+.q-hash {
+  margin: 15px 0 0;
+  font:
+    11px Consolas,
+    monospace;
+  color: #8491a9;
+  word-break: break-all;
+}
+.q-path {
+  max-width: 520px;
+  word-break: break-word;
+  font:
+    11px/1.7 Consolas,
+    monospace;
+}
+.status-queued {
+  color: #8c6a19;
+  background: #fff4da;
+}
+.status-running {
+  color: #315ee7;
+  background: #eaf0ff;
+}
+@media (max-width: 1200px) {
+  .q-chart-grid {
+    grid-template-columns: 1fr;
+  }
+  .q-levels {
+    flex-wrap: wrap;
+  }
+  .q-categories {
+    gap: 18px;
+  }
+}

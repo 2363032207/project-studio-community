@@ -4,6 +4,7 @@ import type { Config } from './config.js';
 import { createToken, hashPassword, tokenHash, verifyPassword } from './auth.js';
 import { Database } from './database.js';
 import { registerExtendedRoutes } from './extended.js';
+import { registerQualityRoutes } from './quality.js';
 
 export type CurrentUser = { id: string; email: string; display_name: string; role: 'admin' | 'user' };
 declare module 'fastify' { interface FastifyRequest { currentUser: CurrentUser | null } }
@@ -428,6 +429,7 @@ export async function buildApp(config: Config, database = new Database(config.da
   });
 
   registerExtendedRoutes(app, database, { audit, projectRole });
+  registerQualityRoutes(app, { audit, projectRole });
   app.addHook('onClose', async () => database.close());
   return app;
 }

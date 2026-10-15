@@ -10,6 +10,8 @@
 - 需求与 Bug 全生命周期管理，包含验收标准、严重级别、环境和复现信息；
 - 测试用例库、用例套件、需求覆盖矩阵；
 - 测试计划、执行结果和质量报告；
+- 游戏性能采样、日志/Trace 分析、历史对比与离线报告；
+- APK 包体结构、重复资源、图片尺寸和自定义质量红线；
 - 项目审计记录；
 - PostgreSQL 持久化；
 - Docker Compose 一键启动。
@@ -83,6 +85,8 @@ npm run dev
 演示数据使用 `example.com`、通用项目名称和虚构业务场景，不包含公司、客户、产品、账号或内部地址标识。
 
 更多说明见 [SECURITY.md](SECURITY.md) 和 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+
+游戏性能/APK 模块的设计、格式、限制与部署见 [docs/GAME-QUALITY.md](docs/GAME-QUALITY.md)。两个入口为 `#performance` 和 `#apk`。新增分析核心使用 Python 标准库；Docker 默认附带官方 Perfetto 二进制解析器，Unity 原生 Profiler 通过配套 Editor 导出器转换。
 
 公开仓库前执行：
 
