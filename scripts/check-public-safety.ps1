@@ -42,6 +42,19 @@ if ($LASTEXITCODE -notin 0, 1) { throw '邮箱扫描失败。' }
 $nonExampleEmails = @($emailHits | Where-Object { $_ -notmatch '(?i)@example\.(com|org|net)(\b|$)' })
 if ($nonExampleEmails) { Write-Error ("发现可能属于个人或组织的邮箱：`n" + ($nonExampleEmails -join "`n")) }
 
+# Git 身份不在源码中；单独检查全部可达提交，防止历史元数据携带私人邮箱。
+$historyEmails = @(& git log --all --format='%ae%n%ce')
+if ($LASTEXITCODE -ne 0) { throw '读取 Git 提交身份失败。' }
+$identityLine = & git var GIT_AUTHOR_IDENT
+if ($LASTEXITCODE -ne 0) { throw '读取当前 Git 提交身份失败。' }
+$identityEmail = if ($identityLine -match '<([^>]+)>') { $matches[1] } else { '' }
+$unsafeIdentities = @(@($historyEmails) + @($identityEmail) | Where-Object {
+  $_ -and $_ -notmatch '(?i)@example\.(com|org|net)$' -and $_ -notmatch '(?i)@users\.noreply\.github\.com$'
+} | Sort-Object -Unique)
+if ($unsafeIdentities.Count -gt 0) {
+  throw 'Git 历史或当前提交身份中发现个人邮箱。请先匿名化历史，并设置本仓库的通用提交身份。'
+}
+
 $localPatternFile = Join-Path $root 'scripts/public-safety.local-patterns.txt'
 if (Test-Path $localPatternFile) {
   foreach ($pattern in Get-Content $localPatternFile) {
@@ -53,4 +66,4 @@ if (Test-Path $localPatternFile) {
   }
 }
 
-Write-Host '公开安全扫描通过：未发现个人邮箱、私网地址、密钥或归档文件。' -ForegroundColor Green
+Write-Host '公开安全扫描通过：源码、Git 历史和当前提交身份未发现个人邮箱；未发现私网地址、密钥或归档文件。' -ForegroundColor Green
